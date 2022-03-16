@@ -1,0 +1,23 @@
+{
+  "name": "8080-emu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc",
+    "dev": "npx ts-node-dev --respawn --transpile-only ./src/index.ts",
+    "start": "node ./dist/index.js"
+  },
+  "author": "Greg Coonrod",
+  "license": "ISC",
+  "dependencies": {
+    "typescript": "^4.6.2",
+    "yargs": "^17.3.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node16": "^1.0.2",
+    "@types/node": "^17.0.21",
+    "@types/yargs": "^17.0.9",
+    "ts-node-dev": "^1.1.8"
+  }
+}
