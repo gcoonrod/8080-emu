@@ -20,6 +20,14 @@ const parity = (x: number, size: number) => {
   return (0 === (p & 0x1)) ? 1:0
 }
 
+const updateLogicFlagsA = (state: State8080) => {
+  state.cc.cy = 0
+  state.cc.ac = 0
+  state.cc.z = (state.a === 0) ? 1:0
+  state.cc.s = (0x80 === (state.a & 0x80)) ? 1:0
+  state.cc.p = parity(state.a, 8)
+}
+
 const addUpdateState = (state: State8080, answer: number) => {
   state.cc.z = ((answer & 0xff) === 0) ? 1:0
   state.cc.s = ((answer & 0x80) !== 0) ? 1:0
@@ -62,6 +70,78 @@ export const LXI_SP: OpExecute = (state) => {
   return state
 }
 
+// 0x09
+export const DAD_B: OpExecute = (state) => {
+  const hl = (state.h << 8) | state.l
+  const bc = (state.b << 8) | state.c
+  const result = hl + bc
+  state.h = (result & 0xff00) >> 8
+  state.l = result & 0xff
+  state.cc.cy = ((result & 0xffff0000) > 0) ? 1:0
+  state.pc += 1
+  return state
+}
+
+// 0x19
+export const DAD_D: OpExecute = (state) => {
+  const hl = (state.h << 8) | state.l
+  const de = (state.d << 8) | state.d
+  const result = hl + de
+  state.h = (result & 0xff00) >> 8
+  state.l = result & 0xff
+  state.cc.cy = ((result & 0xffff0000) > 0) ? 1:0
+  state.pc += 1
+  return state
+}
+
+export const DAD_H: OpExecute = (state) => {
+  const hl = (state.h << 8) | state.l
+  const result = hl + hl
+  state.h = (result & 0xff00) >> 8
+  state.l = result & 0xff
+  state.cc.cy = ((result & 0xffff000) !== 0) ? 1:0
+  state.pc += 1
+  return state
+}
+
+// 0x0D
+export const DCR_C: OpExecute = (state) => {
+  const result = state.c - 1
+  state.cc.z = (result === 0) ? 1:0
+  state.cc.s = (0x80 === (result & 0x80)) ? 1:0
+  state.cc.p = parity(result, 8)
+  state.c = result
+  state.pc += 1
+  return state
+}
+
+// 0x0E
+export const MVI_C: OpExecute = (state) => {
+  const data = getOpData(state)
+  state.c = data[1]
+  state.pc += 2
+  return state
+}
+
+// 0x26
+export const MVI_H: OpExecute = (state) => {
+  state.l++
+  if (state.l === 0) {
+    state.h++
+  }
+  state.pc += 1
+  return state
+}
+
+// 0x36
+export const MVI_M: OpExecute = (state) => {
+  const data = getOpData(state)
+  const offset = (state.h << 8) | state.l
+  state.memory[offset] = data[1]
+  state.pc += 2
+  return state
+}
+
 // 0x11
 export const LXI_D: OpExecute = (state) => {
   const data = getOpData(state)
@@ -85,6 +165,15 @@ export const LDAX_D: OpExecute = (state) => {
   const offset = (state.d << 8) | state.e
   state.a = state.memory[offset]
   state.pc += 1
+  return state
+}
+
+// 0x3A
+export const LDA: OpExecute = (state) => {
+  const data = getOpData(state)
+  const offset = (data[2] << 8) | data[1]
+  state.a = state.memory[offset]
+  state.pc += 3
   return state
 }
 
@@ -137,6 +226,15 @@ export const DCR_B: OpExecute = (state) => {
   state.cc.p = parity(result, 8)
   state.b = result
   state.pc += 1
+  return state
+}
+
+// 0x32
+export const STA: OpExecute = (state) => {
+  const data = getOpData(state)
+  const offset = (data[2] << 8) | data[1]
+  state.memory[offset] = state.a
+  state.pc += 3
   return state
 }
 
@@ -302,10 +400,46 @@ export const POP_B: OpExecute = (state) => {
   return state
 }
 
+// 0xD1
+export const POP_D: OpExecute = (state) => {
+  state.e = state.memory[state.sp]
+  state.d = state.memory[state.sp + 1]
+  state.sp += 2
+  state.pc += 1
+  return state
+}
+
+// 0xE1
+export const POP_H: OpExecute = (state) => {
+  state.l = state.memory[state.sp]
+  state.h = state.memory[state.sp + 1]
+  state.sp += 2
+  state.pc += 1
+  return state
+}
+
 // 0xC5
 export const PUSH_B: OpExecute = (state) => {
   state.memory[state.sp - 1] = state.b
   state.memory[state.sp - 2] = state.c
+  state.sp = state.sp - 2
+  state.pc += 1
+  return state
+}
+
+// 0xD5
+export const PUSH_D: OpExecute = (state) => {
+  state.memory[state.sp - 1] = state.d
+  state.memory[state.sp - 2] = state.e
+  state.sp = state.sp - 2
+  state.pc += 1
+  return state
+}
+
+// 0xE5
+export const PUSH_H: OpExecute = (state) => {
+  state.memory[state.sp - 1] = state.h
+  state.memory[state.sp - 2] = state.l
   state.sp = state.sp - 2
   state.pc += 1
   return state
@@ -349,10 +483,106 @@ export const MVI_B: OpExecute = (state) => {
   return state
 }
 
+// 0x3E
+export const MVI_A: OpExecute = (state) => {
+  const data = getOpData(state)
+  state.a = data[1]
+  state.pc += 2
+  return state
+}
+
 // 0x77
 export const MOV_MA: OpExecute = (state) => {
   const offset = (state.h << 8) | state.l
   state.memory[offset] = state.a
+  state.pc += 1
+  return state
+}
+
+// 0x56
+export const MOV_DM: OpExecute = (state) => {
+  const offset = (state.h << 8) | state.l
+  state.d = state.memory[offset]
+  state.pc += 1
+  return state
+}
+
+// 0x5E
+export const MOV_EM: OpExecute = (state) => {
+  const offset = (state.h << 8) | state.l
+  state.e = state.memory[offset]
+  state.pc += 1
+  return state
+}
+
+// 0x66
+export const MOV_HM: OpExecute = (state) => {
+  const offset = (state.h << 8) | state.l
+  state.h = state.memory[offset]
+  state.pc += 1
+  return state
+}
+
+// 0x7E
+export const MOV_AM: OpExecute = (state) => {
+  const offset = (state.h << 8) | state.l
+  state.a = state.memory[offset]
+  state.pc += 1
+  return state
+}
+
+// 0x7A
+export const MOV_DA: OpExecute = (state) => {
+  state.a = state.d
+  state.pc += 1
+  return state
+}
+
+// 0x7B
+export const MOV_EA: OpExecute = (state) => {
+  state.a = state.e
+  state.pc += 1
+  return state
+}
+
+// 0x7C
+export const MOV_HA: OpExecute = (state) => {
+  state.a = state.h
+  state.pc += 1
+  return state
+}
+
+// 0xA7
+export const ANA_A: OpExecute = (state) => {
+  state.a = state.a & state.a
+  updateLogicFlagsA(state)
+  state.pc += 1
+  return state
+}
+
+// 0xAF
+export const XRA_A: OpExecute = (state) => {
+  state.a = state.a ^ state.a
+  updateLogicFlagsA(state)
+  state.pc += 1
+  return state
+}
+
+// 0xEB
+export const XCHG: OpExecute = (state) => {
+  const d = state.d
+  const e = state.e
+  state.d = state.h
+  state.e = state.l
+  state.h = d
+  state.l = e
+  state.pc += 1
+  return state
+}
+
+// 0xFB
+export const EI: OpExecute = (state) => {
+  state.intEnable = 1
   state.pc += 1
   return state
 }
