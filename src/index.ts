@@ -21,9 +21,26 @@ yargs(process.argv.slice(2))
       type: 'string',
       describe: 'the file to execute'
     })
+    .option('debug', {
+      alias: 'D',
+      boolean: true,
+      default: false
+    })
   }, (argv) => {
     const file = argv.file as string
-    commands.execute(file)
+    const options = {
+      debug: argv.debug as boolean
+    }
+    commands.execute(file, options)
+  })
+  .command('debugger [file]', 'debugger', yargs => {
+    yargs.positional('file', {
+      type: 'string',
+      describe: 'the file to debug'
+    })
+  }, (argv) => {
+    const file = argv.file as string
+    commands.debug(file)
   })
   .help()
   .argv

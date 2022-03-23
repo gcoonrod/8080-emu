@@ -41,6 +41,8 @@ for (const [name, attrs] of Object.entries(opcodes)) {
   nameToCodeMap.set(name, opCode)
 }
 
-export const lookup = (code: number): OpCode | undefined => {
-  return codeToOpMap.get(code)
+export const lookup = (code: number): OpCode => {
+  return codeToOpMap.get(code)! 
 }
+
+export * from './map'
