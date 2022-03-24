@@ -1,5 +1,4 @@
-import { lookup, OpCode, opcodes } from "../opcodes";
-import { MappedMemory, ROM } from "./memory";
+import { MappedMemory } from "./memory";
 import { getOperation, NOP, Operation } from "./operations";
 import { Register } from "./register";
 
@@ -202,7 +201,6 @@ export class CPU {
   }
 
   public setMemoryAt(address: number, byte: number) {
-    console.log(`SET MEMORY [0x${address.toString(16)}] (0x${byte.toString(16)})`)
     this.memory.setUint8(address, byte)
   }
 
@@ -263,7 +261,6 @@ export class CPU {
   }
 
   private execute() {
-    this.operation.execute.bind(this)()
     if (this.debug) {
       let opLog = `0x${(this._pc).toString(16)}:\t${this.operation.name}`
       if (this.operation.size > 1) {
@@ -272,8 +269,9 @@ export class CPU {
       if (this.operation.size > 2) {
         opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16)}`
       }
-      console.log(`${opLog}\t\t\t${this.printRegisters()}`)
+      console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
     }
+    this.operation.execute.bind(this)()
   }
 
   public cycle() {

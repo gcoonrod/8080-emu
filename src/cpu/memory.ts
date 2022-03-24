@@ -51,6 +51,7 @@ type Region = {
   start: number
   end: number
   device: MemoryDevice
+  remap: boolean
 }
 
 export class MappedMemory {
@@ -64,7 +65,9 @@ export class MappedMemory {
     const region: Region = {
       device: device,
       start: start,
-      end: start + size -1
+      end: start + size -1,
+      //end: start + size,
+      remap: true
     }
 
     this.regions.unshift(region)
@@ -74,8 +77,13 @@ export class MappedMemory {
   }
 
   public findRegion(address: number) {
-    const region = this.regions.find(r => address >= r.start && address <= r.end)
+    let searchResults: string[] = []
+    const region = this.regions.find(r => {
+      searchResults.push(`start=0x${r.start.toString(16)} address=0x${address.toString(16)} end=0x${r.end.toString(16)}`)
+      return address >= r.start && address <= r.end
+    })
     if (!region) {
+      searchResults.forEach(s => console.log(s))
       throw new Error(`No memory region found for address [0x${address.toString(16)}]`)
     }
     return region
@@ -83,19 +91,26 @@ export class MappedMemory {
 
   public getUint8(address: number) {
     const region = this.findRegion(address)
-    return region.device.getUint8(address)
+    const finalAddress = region.remap ? address - region.start : address
+    return region.device.getUint8(finalAddress)
   }
 
   public getUint16(address: number) {
-    return this.findRegion(address).device.getUint16(address)
+    const region = this.findRegion(address)
+    const finalAddress = region.remap ? address - region.start : address
+    return region.device.getUint16(finalAddress)
   }
 
   public setUint8(address: number, value: number) {
-    return this.findRegion(address).device.setUint8(address, value)
+    const region = this.findRegion(address)
+    const finalAddress = region.remap ? address - region.start : address
+    return region.device.setUint8(finalAddress, value)
   }
 
   public setUint16(address: number, value: number) {
-    return this.findRegion(address).device.setUint16(address, value)
+    const region = this.findRegion(address)
+    const finalAddress = region.remap ? address - region.start : address
+    return region.device.setUint16(finalAddress, value)
   }
 
   public load(startAddress: number, data: number[]) {
