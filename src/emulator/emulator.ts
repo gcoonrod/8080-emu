@@ -8,12 +8,12 @@ type Skip = {
 
 export type EmulatorOptions = {
   cpu: CPU,
-  rom: {
+  rom?: {
     device: ROM,
     start: number,
     end: number
   },
-  ram: {
+  ram?: {
     device: RAM,
     start: number,
     end: number
@@ -29,8 +29,12 @@ export class Emulator {
   constructor(options: EmulatorOptions) {
     this.cpu = options.cpu
     this.memory = new MappedMemory()
-    this.memory.map(options.rom.device, options.rom.start, options.rom.end - options.rom.start)
-    this.memory.map(options.ram.device, options.ram.start, options.ram.end - options.ram.start)
+    if (options.rom) {
+      this.memory.map(options.rom.device, options.rom.start, options.rom.end - options.rom.start)
+    }
+    if (options.ram) {
+      this.memory.map(options.ram.device, options.ram.start, options.ram.end - options.ram.start)
+    }
     this.skips = options.skips ?? []
     this.cpu.initializeMemory(this.memory)
   }

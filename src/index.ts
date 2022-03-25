@@ -4,6 +4,7 @@
 
 import path from "path";
 import { disassemble } from "./commands/disassemble";
+import { CPUDiag } from "./emulator/cpudiag";
 import { Invaders } from "./emulator/invaders";
 
 // yargs(process.argv.slice(2))
@@ -12,6 +13,7 @@ import { Invaders } from "./emulator/invaders";
 //   .help()
 //   .argv
 
-Invaders.run()
+//Invaders.run()
+CPUDiag.run()
 
 //disassemble(path.join(__dirname, '../roms/invaders/invaders'))

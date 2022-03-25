@@ -30,6 +30,12 @@ export type CPUOptions = {
   debug?: boolean
 }
 
+export type OperationOverride = {
+  opcode: number,
+  predicate: (this: CPU, op: Operation) => boolean,
+  execute: (this: CPU, resume: boolean) => void
+}
+
 export class CPU {
   // Registers, memory, IO
   private registers: Map<Register8080, CPURegister>
@@ -43,6 +49,7 @@ export class CPU {
   private _pc: number = 0
 
   private operation: Operation
+  private overrides: OperationOverride[]
 
   constructor({ debug }: CPUOptions) {
     if (debug) {
@@ -71,6 +78,7 @@ export class CPU {
 
     this.memory = new MappedMemory()
     this.operation = NOP
+    this.overrides = []
   }
 
   public enableInterrupts() {
@@ -87,6 +95,10 @@ export class CPU {
 
   public isHalted() {
     return this.halted
+  }
+
+  public registerOverride(override: OperationOverride) {
+    this.overrides.push(override)
   }
 
   public printRegisters() {
@@ -217,23 +229,26 @@ export class CPU {
     return
   }
 
+  public printState() {
+    let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}\t`
+      if (this.operation.size > 1) {
+        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
+      }
+      if (this.operation.size > 2) {
+        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16).padStart(2, '0')}`
+      }
+      console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
+  }
+
   private fetch() {
     const op = this.getNextByte()
     this._pc = this.getRegisterValue(Register8080.PC)
     this.registers.get(Register8080.IR)!.reg.set(op)
     this.registers.get(Register8080.PC)!.reg.add(1)
-    // if (this.debug) {
-    //   console.log('FETCH')
-    //   this.printRegisters()
-    // }
   }
 
   private decode() {
     this.operation = getOperation(this.getRegisterValue(Register8080.IR))
-    // if (this.debug) {
-    //   console.log('DECODE')
-    //   this.printRegisters()
-    // }
   }
 
   private readMemory1() {
@@ -241,10 +256,6 @@ export class CPU {
       const data = this.getNextByte()
       this.registers.get(Register8080.W)!.reg.set(data)
       this.registers.get(Register8080.PC)!.reg.add(1)
-      // if (this.debug) {
-      //   console.log('READ MEMORY 1')
-      //   this.printRegisters()
-      // }
     }
   }
 
@@ -253,16 +264,12 @@ export class CPU {
       const data = this.getNextByte()
       this.registers.get(Register8080.Z)!.reg.set(data)
       this.registers.get(Register8080.PC)!.reg.add(1)
-      // if (this.debug) {
-      //   console.log('READ MEMORY 2')
-      //   this.printRegisters()
-      // }
     }
   }
 
   private execute() {
     if (this.debug) {
-      let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}`
+      let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}\t`
       if (this.operation.size > 1) {
         opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
       }
@@ -279,23 +286,13 @@ export class CPU {
     this.decode()
     this.readMemory1()
     this.readMemory2()
-    this.execute()
+    const overrides = this.overrides
+      .filter(o => o.opcode === this.operation.opcode)
+      .filter(o => o.predicate.bind(this)(this.operation))
+    if (overrides.length === 1) {
+      overrides[0].execute.bind(this)(false)
+    } else {
+      this.execute()
+    }
   }
 }
-
-// const cpu = new CPU({ debug: true })
-// const rom = new ROM(8)
-// rom.load([0x00, 0x00, 0x00, 0x47])
-// const memory = new MappedMemory()
-// memory.map(rom, 0, 0xff)
-// cpu.initializeMemory(memory)
-// cpu.setRegisterValue(Register8080.A, 0xfe)
-
-// for (let i = 0; i < 4; i++) {
-//   cpu.fetch()
-//   cpu.decode()
-//   cpu.readMemory1()
-//   cpu.readMemory2()
-//   cpu.execute()
-// }
-
