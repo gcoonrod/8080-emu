@@ -114,7 +114,7 @@ export const POP_H: Operation = {
 
 export const POP_PSW: Operation = {
   name: 'POP PSW',
-  opcode: 0xc1,
+  opcode: 0xf1,
   size: 1,
   execute() {
     const SP = this.getRegisterValue(Register8080.SP)

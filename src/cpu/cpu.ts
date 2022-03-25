@@ -262,12 +262,12 @@ export class CPU {
 
   private execute() {
     if (this.debug) {
-      let opLog = `0x${(this._pc).toString(16)}:\t${this.operation.name}`
+      let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}`
       if (this.operation.size > 1) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16)}`
+        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
       }
       if (this.operation.size > 2) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16)}`
+        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16).padStart(2, '0')}`
       }
       console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
     }

@@ -1,6 +1,7 @@
 export class Register {
   value: number
   size: number
+  pad: 2 | 4
 
   constructor(initialValue: number = 0, size = 0xff) {
     if (initialValue > size) {
@@ -8,6 +9,11 @@ export class Register {
     }
     this.value = initialValue
     this.size = size
+    if (this.size === 0xff) {
+      this.pad = 2
+    } else {
+      this.pad = 4
+    }
   }
 
   public get() {
@@ -15,7 +21,7 @@ export class Register {
   }
 
   public toString() {
-    return this.value.toString(16)
+    return this.value.toString(16).padStart(this.pad, '0')
   }
 
   public set(value: number) {
