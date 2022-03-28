@@ -6,8 +6,9 @@
   "scripts": {
     "build": "npx tsc",
     "dev": "npx ts-node-dev --respawn --transpile-only ./src/index.ts",
-    "start": "node ./dist/index.js",
-    "test": "npx jest"
+    "start": "npm run build && node ./dist/index.js",
+    "test": "npx jest",
+    "invaders": "npm run build && node ./dist/index.js --emu invaders"
   },
   "author": "Greg Coonrod",
   "license": "ISC",

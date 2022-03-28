@@ -482,7 +482,7 @@ export const CPI: Operation = {
     const byte2 = this.getRegisterValue(Register8080.W)
     const result = A - byte2
     this.updateFlagsLogical()
-    if (result === 0) {
+    if ((result & 0xff) === 0) {
       this.setFlag(Flag8080.Z, true)
     }
     if (result < 0) {

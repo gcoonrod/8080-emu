@@ -118,6 +118,8 @@ export class CPU {
     if (_register && _register.public) {
       if (value <= _register.size) {
         _register.reg.set(value)
+      } else {
+        _register.reg.set((value & 0x00ff))
       }
     } else {
       if (this.debug) {
@@ -168,7 +170,7 @@ export class CPU {
   }
 
   public updateFlags(result: number) {
-    const CY = (result > 0xff)
+    const CY = (result >= 0x100 || result < 0)
     const Z = ((result & 0xff) === 0)
     const S = (0x80 === (result & 0x80))
     const P = this.parity(result & 0xff, 8)
@@ -230,14 +232,20 @@ export class CPU {
   }
 
   public printState() {
-    let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}\t`
-      if (this.operation.size > 1) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
-      }
-      if (this.operation.size > 2) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16).padStart(2, '0')}`
-      }
-      console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
+    let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t[${this.operation.opcode.toString(16).padStart(2, '0')}] ${this.operation.name}\t`
+    if (this.operation.size > 1) {
+      opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
+    }
+    if (this.operation.size > 2) {
+      opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16).padStart(2, '0')}`
+    }
+    let flagLog = `\t\t\t\t\tZ=${this.getFlagValue(Flag8080.Z)} `
+    flagLog += `S=${this.getFlagValue(Flag8080.S)} `
+    flagLog += `P=${this.getFlagValue(Flag8080.P)} `
+    flagLog += `CY=${this.getFlagValue(Flag8080.CY)} `
+    flagLog += `AC=${this.getFlagValue(Flag8080.AC)}`
+    console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
+    console.log(flagLog)
   }
 
   private fetch() {
@@ -269,14 +277,7 @@ export class CPU {
 
   private execute() {
     if (this.debug) {
-      let opLog = `0x${(this._pc).toString(16).padStart(4, '0')}:\t${this.operation.name}\t`
-      if (this.operation.size > 1) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.W).toString(16).padStart(2, '0')}`
-      }
-      if (this.operation.size > 2) {
-        opLog = opLog + ` 0x${this.getRegisterValue(Register8080.Z).toString(16).padStart(2, '0')}`
-      }
-      console.log(`${opLog}${this.operation.size > 2 ? '\t' : '\t\t'}${this.printRegisters()}`)
+      this.printState()
     }
     this.operation.execute.bind(this)()
   }

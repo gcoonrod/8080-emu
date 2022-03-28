@@ -3,17 +3,17 @@ import { readFile } from 'fs/promises'
 import { CPU, Register8080 } from '../cpu/cpu'
 import { RAM, ROM } from '../cpu/memory'
 import { CALL, JMP } from '../cpu/operations/branching'
-import { Emulator } from './emulator'
+import { Emulator, ExecutionOptions } from './emulator'
 
 export const CPUDiag = {
-  run: async () => {
+  run: async (options: ExecutionOptions) => {
     const cpuDiagData = await readFile('./roms/cpudiag/cpudiag.bin', { encoding: 'hex' })
     const cpuDiagArray = Array.from(Buffer.from(cpuDiagData, 'hex'))
 
     const ram = new RAM(0x2000)
     ram.load(cpuDiagArray)
 
-    const cpu: CPU = new CPU({ debug: true})
+    const cpu: CPU = new CPU({ debug: options.debug ?? false })
     const emulator = new Emulator({
       cpu: cpu,
       ram: {
@@ -61,6 +61,7 @@ export const CPUDiag = {
         }
       }
     })
+
     cpu.registerOverride({
       opcode: CALL.opcode,
       predicate(op) {

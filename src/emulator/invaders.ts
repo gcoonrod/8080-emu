@@ -2,10 +2,10 @@ import { readFile } from 'fs/promises'
 
 import { CPU, Register8080 } from '../cpu/cpu'
 import { RAM, ROM } from '../cpu/memory'
-import { Emulator } from './emulator'
+import { Emulator, EmulatorOptions, ExecutionOptions } from './emulator'
 
 export const Invaders = {
-  run: async () => {
+  run: async (options: ExecutionOptions) => {
     const invadersH = await readFile('./roms/invaders/invaders.h', { encoding: 'hex' })
     const invadersG = await readFile('./roms/invaders/invaders.g', { encoding: 'hex' })
     const invadersF = await readFile('./roms/invaders/invaders.f', { encoding: 'hex' })
@@ -20,7 +20,7 @@ export const Invaders = {
     const ramArray = new Uint8Array(0xdfff).fill(0)
     ram.load(Array.from(ramArray))
   
-    const cpu: CPU = new CPU(({ debug: true }))
+    const cpu: CPU = new CPU(({ debug: options.debug ?? false }))
     const emulator: Emulator = new Emulator({
       cpu: cpu,
       rom: {

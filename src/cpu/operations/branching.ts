@@ -75,7 +75,7 @@ export const JM: Operation = {
   opcode: 0xfa,
   size: 3,
   execute() {
-    if (this.getFlagValue(Flag8080.S) === 0) {
+    if (this.getFlagValue(Flag8080.S) === 1) {
       const byte2 = this.getRegisterValue(Register8080.W)
       const byte3 = this.getRegisterValue(Register8080.Z)
       const address = (byte3 << 8) | byte2
@@ -89,7 +89,7 @@ export const JP: Operation = {
   opcode: 0xf2,
   size: 3,
   execute() {
-    if (this.getFlagValue(Flag8080.S) === 1) {
+    if (this.getFlagValue(Flag8080.S) === 0) {
       const byte2 = this.getRegisterValue(Register8080.W)
       const byte3 = this.getRegisterValue(Register8080.Z)
       const address = (byte3 << 8) | byte2

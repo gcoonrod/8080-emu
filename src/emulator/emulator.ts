@@ -6,6 +6,10 @@ type Skip = {
   size: number
 }
 
+export type ExecutionOptions = {
+  debug: boolean
+}
+
 export type EmulatorOptions = {
   cpu: CPU,
   rom?: {
@@ -18,7 +22,8 @@ export type EmulatorOptions = {
     start: number,
     end: number
   },
-  skips?: Skip[]
+  skips?: Skip[],
+  execOptions?: ExecutionOptions
 }
 
 export class Emulator {

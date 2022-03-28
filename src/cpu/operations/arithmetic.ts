@@ -1,6 +1,29 @@
 import { Operation } from ".";
 import { Flag8080, Register8080 } from "../cpu";
 
+const binaryAdd = (x: number, y: number) => {
+  let carry = 0
+  while (y !== 0) {
+    carry = (x & y) << 1
+    x = x ^ y
+    y = carry
+  }
+
+  return x
+}
+
+const binarySub = (x: number, y: number) => {
+  let carry = 0
+  y = binaryAdd(~y, 1)
+  while (y !== 0) {
+    carry = (x & y) << 1
+    x = x ^ y
+    y = carry
+  }
+
+  return y
+}
+
 // ADC
 export const ADC_B: Operation = {
   name: 'ADC B',
@@ -358,9 +381,13 @@ export const SBI: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const byte2 = this.getRegisterValue(Register8080.W)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - byte2 - CY
-    this.setRegisterValue(Register8080.A, result)
-    this.updateFlags(result)
+    let result = A - (byte2 + CY)
+    //console.log(`${result.toString(16)} = ${A.toString(16)} - (${byte2.toString(16)} - ${CY.toString(16)})`)
+    // if (result < 0) {
+    //   result = (0xff + 1) - Math.abs(result)
+    // }
+    this.setRegisterValue(Register8080.A, result & 0xff)
+    this.updateFlags(A - (byte2 - CY))
   }
 }
 
@@ -371,8 +398,11 @@ export const SUI: Operation = {
   execute() {
     const A = this.getRegisterValue(Register8080.A)
     const byte2 = this.getRegisterValue(Register8080.W)
-    const result = A - byte2
-    this.setRegisterValue(Register8080.A, result)
+    let result = A - byte2
+    // if (result < 0) {
+    //   result = (0xff + 1) - Math.abs(result)
+    // }
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -461,8 +491,8 @@ export const SBB_B: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const B = this.getRegisterValue(Register8080.B)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - B - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (B + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -475,8 +505,8 @@ export const SBB_C: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const C = this.getRegisterValue(Register8080.C)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - C - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (C + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -489,8 +519,8 @@ export const SBB_D: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const D = this.getRegisterValue(Register8080.D)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - D - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (D + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -503,8 +533,8 @@ export const SBB_E: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const E = this.getRegisterValue(Register8080.E)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - E - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (E + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -517,8 +547,8 @@ export const SBB_H: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const H = this.getRegisterValue(Register8080.H)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - H - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (H + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -531,8 +561,8 @@ export const SBB_L: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const L = this.getRegisterValue(Register8080.L)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - L - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (L + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -545,8 +575,8 @@ export const SBB_M: Operation = {
     const A = this.getRegisterValue(Register8080.A)
     const val = this.getMemoryHL()
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - val - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (val + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }
@@ -558,8 +588,8 @@ export const SBB_A: Operation = {
   execute() {
     const A = this.getRegisterValue(Register8080.A)
     const CY = this.getFlagValue(Flag8080.CY)
-    const result = A - A - CY
-    this.setRegisterValue(Register8080.A, result)
+    const result = A - (A + CY)
+    this.setRegisterValue(Register8080.A, result & 0xff)
     this.updateFlags(result)
   }
 }

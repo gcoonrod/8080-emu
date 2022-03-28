@@ -28,7 +28,7 @@ export class Register {
     if (value > this.size) {
       throw new Error('Value exceeds register capacity')
     }
-    this.value= value
+    this.value = value
   }
 
   public add(value: number) {
